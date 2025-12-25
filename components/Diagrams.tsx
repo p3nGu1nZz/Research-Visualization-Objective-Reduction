@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Sigma, Scale, ChevronRight, Zap, Terminal, Sliders } from 'lucide-react';
+import { Activity, Sigma, ChevronRight, Zap, Terminal, Sliders } from 'lucide-react';
 
 export const MathTooltip = ({ children, tip, title = "DEFINITION" }: { children?: React.ReactNode; tip: string; title?: string }) => {
   const [offset, setOffset] = useState(0);
@@ -17,9 +17,12 @@ export const MathTooltip = ({ children, tip, title = "DEFINITION" }: { children?
   const handleInteraction = (show: boolean) => {
     if (show && spanRef.current) {
       const rect = spanRef.current.getBoundingClientRect();
-      const tooltipWidth = 300; // Fixed width for calculation
       const screenPadding = 16;
       const viewportWidth = window.innerWidth;
+      
+      // Calculate tooltip width dynamically or assume max width
+      // We use max-w-[90vw] or w-[300px] in css
+      const tooltipWidth = Math.min(300, viewportWidth - 32);
       
       const centerX = rect.left + rect.width / 2;
       const leftEdge = centerX - tooltipWidth / 2;
@@ -43,17 +46,21 @@ export const MathTooltip = ({ children, tip, title = "DEFINITION" }: { children?
       ref={spanRef}
       onMouseEnter={() => handleInteraction(true)}
       onMouseLeave={() => handleInteraction(false)}
-      onTouchStart={() => handleInteraction(!isVisible)} // Toggle on touch
+      onTouchStart={(e) => { e.stopPropagation(); handleInteraction(!isVisible); }}
       className="relative group/tooltip cursor-help inline-block mx-1 align-baseline z-30"
     >
       <span className="border-b border-dotted border-cyber-cyan text-cyber-cyan font-bold transition-all hover:bg-cyber-cyan/10 hover:border-solid px-1 rounded-sm whitespace-nowrap">
         {children}
       </span>
       <span 
-        className={`absolute bottom-full left-1/2 mb-3 w-[280px] sm:w-[320px] p-0 pointer-events-none transform origin-bottom z-[100] transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
-        style={{ marginLeft: -150 + offset + (window.innerWidth >= 640 ? -10 : 0) }} // Adjust center based on width
+        className={`fixed md:absolute top-auto bottom-12 md:bottom-full left-4 right-4 md:left-1/2 md:right-auto md:w-[320px] pointer-events-none transform md:origin-bottom z-[1000] transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
+        style={{ 
+          // On mobile, use fixed positioning via CSS classes (left-4 right-4).
+          // On desktop, use margin offset
+          marginLeft: window.innerWidth >= 768 ? -160 + offset : 0,
+        }} 
       >
-         <div className="bg-cyber-black/95 backdrop-blur-xl border border-cyber-cyan/50 text-gray-200 text-sm shadow-[0_0_30px_rgba(0,240,255,0.2)] rounded-lg overflow-hidden">
+         <div className="bg-cyber-black/95 backdrop-blur-xl border border-cyber-cyan/50 text-gray-200 text-sm shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-lg overflow-hidden">
             <div className="bg-cyber-cyan/10 px-3 py-2 text-[10px] font-mono text-cyber-cyan border-b border-cyber-cyan/20 uppercase tracking-[0.2em] flex justify-between items-center">
               <span className="flex items-center gap-2"><Terminal size={12} /> {title}</span>
             </div>
@@ -61,9 +68,9 @@ export const MathTooltip = ({ children, tip, title = "DEFINITION" }: { children?
               {tip}
             </div>
          </div>
-         {/* Arrow */}
+         {/* Arrow for desktop only */}
          <div 
-           className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-cyber-cyan/50"
+           className="hidden md:block absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-cyber-cyan/50"
            style={{ marginLeft: -offset }}
          ></div>
       </span>

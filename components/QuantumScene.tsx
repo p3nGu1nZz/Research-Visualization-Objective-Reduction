@@ -6,11 +6,11 @@
 
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, MeshDistortMaterial, Sphere, Torus, Octahedron, Icosahedron, Stars, Environment } from '@react-three/drei';
-import * as THREE from 'three';
+import { Float, MeshDistortMaterial, Sphere, Torus, Octahedron, Stars } from '@react-three/drei';
+import { Mesh, MeshStandardMaterial, DoubleSide } from 'three';
 
 const NeonOperatorNode = ({ position, color, speed = 1, type = 'sphere' }: { position: [number, number, number]; color: string; speed?: number; type?: 'sphere' | 'octa' }) => {
-  const ref = useRef<THREE.Mesh>(null);
+  const ref = useRef<Mesh>(null);
   
   useFrame((state) => {
     if (ref.current) {
@@ -53,7 +53,7 @@ const NeonOperatorNode = ({ position, color, speed = 1, type = 'sphere' }: { pos
 };
 
 const CyberTorus = () => {
-  const ref = useRef<THREE.Mesh>(null);
+  const ref = useRef<Mesh>(null);
   
   useFrame((state) => {
     if (ref.current) {
@@ -62,7 +62,7 @@ const CyberTorus = () => {
        ref.current.rotation.z = t * 0.1;
 
        // Pulse effect
-       const material = ref.current.material as THREE.MeshStandardMaterial;
+       const material = ref.current.material as MeshStandardMaterial;
        if (material) {
          // Base intensity 1.5, pulsing +/- 0.8 over time
          material.emissiveIntensity = 1.5 + Math.sin(t * 3) * 0.8;
@@ -146,7 +146,7 @@ export const HilbertSpaceScene: React.FC = () => {
                     emissiveIntensity={0.5}
                     transparent
                     opacity={0.1}
-                    side={THREE.DoubleSide}
+                    side={DoubleSide}
                 />
             </Sphere>
         </Float>
