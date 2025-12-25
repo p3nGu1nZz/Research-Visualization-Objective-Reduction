@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Objective Reduction via Operator Annihilation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Rajdhani"', 'sans-serif'],
+              mono: ['"Share Tech Mono"', 'monospace'],
+            },
+            colors: {
+              cyber: {
+                black: '#050505',
+                dark: '#0f0f11',
+                gray: '#1a1a1d',
+                yellow: '#fcee0a',
+                cyan: '#00f0ff',
+                red: '#ff003c',
+                purple: '#710193',
+                dim: 'rgba(0, 240, 255, 0.1)'
+              }
+            },
+            animation: {
+              'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'glitch': 'glitch 1s linear infinite',
+            },
+            keyframes: {
+              glitch: {
+                '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
+                '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
+                '62%': { transform: 'translate(0,0) skew(5deg)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 100px;
+        background-color: #050505;
+      }
+      body {
+        background-color: #050505;
+        color: #e0e0e0;
+        overflow-x: hidden;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f0f11; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333; 
+        border: 1px solid #00f0ff;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #00f0ff; 
+      }
+      
+      .cyber-glitch-text {
+        position: relative;
+      }
+      .cyber-glitch-text::before,
+      .cyber-glitch-text::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .cyber-glitch-text::before {
+        left: 2px;
+        text-shadow: -1px 0 #ff003c;
+        background: #050505;
+        overflow: hidden;
+        clip: rect(0, 900px, 0, 0);
+        animation: noise-anim-2 3s infinite linear alternate-reverse;
+      }
+      .cyber-glitch-text::after {
+        left: -2px;
+        text-shadow: -1px 0 #00f0ff;
+        background: #050505;
+        overflow: hidden;
+        clip: rect(0, 900px, 0, 0);
+        animation: noise-anim 2s infinite linear alternate-reverse;
+      }
+      
+      @keyframes noise-anim {
+        0% { clip: rect(10px, 9999px, 30px, 0); }
+        5% { clip: rect(70px, 9999px, 90px, 0); }
+        10% { clip: rect(30px, 9999px, 10px, 0); }
+        15% { clip: rect(80px, 9999px, 50px, 0); }
+        20% { clip: rect(10px, 9999px, 90px, 0); }
+        100% { clip: rect(10px, 9999px, 100px, 0); }
+      }
+       @keyframes noise-anim-2 {
+        0% { clip: rect(10px, 9999px, 10px, 0); }
+        5% { clip: rect(10px, 9999px, 80px, 0); }
+        10% { clip: rect(90px, 9999px, 30px, 0); }
+        15% { clip: rect(20px, 9999px, 60px, 0); }
+        20% { clip: rect(60px, 9999px, 10px, 0); }
+        100% { clip: rect(50px, 9999px, 20px, 0); }
+      }
+
+      @media print {
+        nav, footer, button {
+          display: none !important;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@react-three/fiber": "https://aistudiocdn.com/@react-three/fiber@^9.4.0",
+    "@react-three/drei": "https://aistudiocdn.com/@react-three/drei@^10.7.7",
+    "three": "https://aistudiocdn.com/three@^0.181.1",
+    "three/": "https://aistudiocdn.com/three@^0.181.1/",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.24",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.553.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
