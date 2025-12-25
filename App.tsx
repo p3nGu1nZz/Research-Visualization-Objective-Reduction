@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Terminal, ChevronDown, Play } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Terminal, ChevronDown, ChevronUp, Play } from 'lucide-react';
 import { HeroScene } from './components/QuantumScene';
 import {
   OperatorFamilyViz,
@@ -16,21 +16,107 @@ import {
 } from './components/Diagrams';
 
 export default function App() {
-  const contentRef = useRef<HTMLElement>(null);
+  const [activeSection, setActiveSection] = useState(0);
+  // We have 5 sections: 0: Hero, 1: Operators, 2: Integral, 3: Threshold, 4: Final
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+  const totalSections = 5;
 
-  const handleStart = () => {
-    contentRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Initialize refs array with empty slots
+  if (sectionRefs.current.length === 0) {
+      sectionRefs.current = new Array(totalSections).fill(null);
+  }
+
+  const scrollToSection = (index: number) => {
+    if (index >= 0 && index < totalSections) {
+      sectionRefs.current[index]?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
+  // Update active section based on scroll position
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Find which ref this entry corresponds to
+            const index = sectionRefs.current.findIndex(ref => ref === entry.target);
+            if (index !== -1) {
+              setActiveSection(index);
+            }
+          }
+        });
+      },
+      { 
+        threshold: 0.5, // Trigger when 50% of the section is visible
+        root: null // Use viewport
+      }
+    );
+
+    sectionRefs.current.forEach((ref) => {
+        if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="bg-cyber-black h-[100dvh] w-full text-gray-200 font-sans selection:bg-cyber-cyan/30 overflow-y-auto overflow-x-hidden relative perspective-1000">
+    <div className="bg-cyber-black h-[100dvh] w-full text-gray-200 font-sans selection:bg-cyber-cyan/30 overflow-y-auto overflow-x-hidden relative perspective-1000 scroll-smooth">
         <div className="fixed inset-0 z-0 pointer-events-none">
             <HeroScene />
         </div>
 
+        {/* Floating Navigation Controls - Right Side */}
+        <div className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-6 items-center pointer-events-none">
+            {/* Up / Previous */}
+            <button 
+                onClick={() => scrollToSection(activeSection - 1)}
+                disabled={activeSection === 0}
+                className={`pointer-events-auto p-3 rounded-full border border-cyber-cyan/50 backdrop-blur-md transition-all duration-300 group
+                    ${activeSection === 0 
+                        ? 'opacity-0 translate-x-10' 
+                        : 'opacity-100 hover:bg-cyber-cyan/20 hover:border-cyber-cyan hover:shadow-[0_0_15px_rgba(0,240,255,0.4)]'
+                    }`}
+                aria-label="Previous Section"
+            >
+                <ChevronUp className="text-cyber-cyan" size={24} />
+            </button>
+
+            {/* Pagination Dots */}
+            <div className="flex flex-col gap-3 py-4 pointer-events-auto">
+                {Array.from({ length: totalSections }).map((_, idx) => (
+                    <button
+                        key={idx}
+                        onClick={() => scrollToSection(idx)}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 
+                            ${activeSection === idx 
+                                ? 'bg-cyber-cyan h-6 shadow-[0_0_10px_#00f0ff]' 
+                                : 'bg-gray-700 hover:bg-gray-500'}`}
+                        aria-label={`Go to section ${idx + 1}`}
+                    />
+                ))}
+            </div>
+
+            {/* Down / Next */}
+            <button 
+                onClick={() => scrollToSection(activeSection + 1)}
+                disabled={activeSection === totalSections - 1}
+                className={`pointer-events-auto p-3 rounded-full border border-cyber-cyan/50 backdrop-blur-md transition-all duration-300 group
+                    ${activeSection === totalSections - 1 
+                        ? 'opacity-0 translate-x-10' 
+                        : 'opacity-100 hover:bg-cyber-cyan/20 hover:border-cyber-cyan hover:shadow-[0_0_15px_rgba(0,240,255,0.4)]'
+                    }`}
+                 aria-label="Next Section"
+            >
+                <ChevronDown className="text-cyber-cyan" size={24} />
+            </button>
+        </div>
+
         <div className="relative z-10 w-full">
-            {/* Page 1: Hero Section - Full Height - Flex Centered for Responsiveness */}
-            <header className="min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center relative gap-12 sm:gap-16">
+            {/* SECTION 0: Hero Section */}
+            <header 
+                ref={el => { sectionRefs.current[0] = el; }}
+                className="min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center relative gap-12 sm:gap-16 snap-start"
+            >
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -48,7 +134,7 @@ export default function App() {
                 </motion.div>
                 
                 <motion.button 
-                   onClick={handleStart}
+                   onClick={() => scrollToSection(1)}
                    initial={{ opacity: 0, y: 20 }}
                    animate={{ opacity: 1, y: 0 }}
                    whileHover={{ scale: 1.05 }}
@@ -60,30 +146,44 @@ export default function App() {
                        Initiate Sequence <Play size={14} className="fill-current" />
                    </span>
                    
-                   {/* Animated Background Fill */}
                    <div className="absolute inset-0 bg-cyber-cyan/80 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0"></div>
                    
-                   {/* Decorative corners */}
                    <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                    <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </motion.button>
             </header>
 
             {/* Page 2+: Data Visualization Widgets */}
-            <main ref={contentRef} className="max-w-5xl mx-auto px-6 pb-32 space-y-32 scroll-mt-24 pt-12 md:pt-0">
-                <section className="w-full">
+            <main className="max-w-5xl mx-auto px-6 pb-32 space-y-32 md:space-y-0 md:gap-32 flex flex-col">
+                {/* SECTION 1: Operator Family */}
+                <section 
+                    ref={el => { sectionRefs.current[1] = el; }}
+                    className="w-full min-h-[80vh] flex items-center justify-center snap-center scroll-mt-12"
+                >
                     <OperatorFamilyViz />
                 </section>
 
-                <section className="w-full">
+                {/* SECTION 2: Integral Summation */}
+                <section 
+                    ref={el => { sectionRefs.current[2] = el; }}
+                    className="w-full min-h-[80vh] flex items-center justify-center snap-center scroll-mt-12"
+                >
                     <IntegralSummationViz />
                 </section>
 
-                <section className="w-full">
+                {/* SECTION 3: Collapse Threshold */}
+                <section 
+                    ref={el => { sectionRefs.current[3] = el; }}
+                    className="w-full min-h-[80vh] flex items-center justify-center snap-center scroll-mt-12"
+                >
                     <CollapseThresholdChart />
                 </section>
 
-                <section className="w-full">
+                {/* SECTION 4: Final Output */}
+                <section 
+                    ref={el => { sectionRefs.current[4] = el; }}
+                    className="w-full min-h-[80vh] flex items-center justify-center snap-center"
+                >
                     <motion.div 
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
