@@ -11,56 +11,57 @@ import { Activity, Sigma, Scale, ChevronRight, Zap, Terminal, Sliders } from 'lu
 export const MathTooltip = ({ children, tip, title = "DEFINITION" }: { children?: React.ReactNode; tip: string; title?: string }) => {
   const [offset, setOffset] = useState(0);
   const spanRef = useRef<HTMLSpanElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
-  const handleMouseEnter = () => {
-    if (!spanRef.current) return;
-    const rect = spanRef.current.getBoundingClientRect();
-    const tooltipWidth = 320; // w-80 is 320px
-    const screenPadding = 20;
-    const viewportWidth = window.innerWidth;
-    
-    // Ideal center position relative to viewport
-    const centerX = rect.left + rect.width / 2;
-    
-    // Calculate theoretical edges if centered
-    const leftEdge = centerX - tooltipWidth / 2;
-    const rightEdge = centerX + tooltipWidth / 2;
-    
-    let correction = 0;
-    
-    // Check right overflow
-    if (rightEdge > viewportWidth - screenPadding) {
-      correction = (viewportWidth - screenPadding) - rightEdge;
+  // Improve mobile touch handling and edge detection
+  const handleInteraction = (show: boolean) => {
+    if (show && spanRef.current) {
+      const rect = spanRef.current.getBoundingClientRect();
+      const tooltipWidth = 300; // Fixed width for calculation
+      const screenPadding = 16;
+      const viewportWidth = window.innerWidth;
+      
+      const centerX = rect.left + rect.width / 2;
+      const leftEdge = centerX - tooltipWidth / 2;
+      const rightEdge = centerX + tooltipWidth / 2;
+      
+      let correction = 0;
+      
+      if (rightEdge > viewportWidth - screenPadding) {
+        correction = (viewportWidth - screenPadding) - rightEdge;
+      } else if (leftEdge < screenPadding) {
+        correction = screenPadding - leftEdge;
+      }
+      
+      setOffset(correction);
     }
-    // Check left overflow
-    else if (leftEdge < screenPadding) {
-      correction = screenPadding - leftEdge;
-    }
-    
-    setOffset(correction);
+    setIsVisible(show);
   };
 
   return (
     <span 
       ref={spanRef}
-      onMouseEnter={handleMouseEnter} 
+      onMouseEnter={() => handleInteraction(true)}
+      onMouseLeave={() => handleInteraction(false)}
+      onTouchStart={() => handleInteraction(!isVisible)} // Toggle on touch
       className="relative group/tooltip cursor-help inline-block mx-1 align-baseline z-30"
     >
-      <span className="border-b-2 border-dotted border-cyber-cyan text-cyber-cyan font-bold transition-all hover:bg-cyber-cyan/10 hover:border-solid px-1 rounded-sm whitespace-nowrap">
+      <span className="border-b border-dotted border-cyber-cyan text-cyber-cyan font-bold transition-all hover:bg-cyber-cyan/10 hover:border-solid px-1 rounded-sm whitespace-nowrap">
         {children}
       </span>
       <span 
-        className="invisible opacity-0 group-hover/tooltip:visible group-hover/tooltip:opacity-100 transition-all duration-300 ease-out absolute bottom-full left-1/2 mb-3 w-80 p-0 pointer-events-none transform origin-bottom translate-y-2 group-hover/tooltip:translate-y-0 z-[100]"
-        style={{ marginLeft: -160 + offset }}
+        className={`absolute bottom-full left-1/2 mb-3 w-[280px] sm:w-[320px] p-0 pointer-events-none transform origin-bottom z-[100] transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
+        style={{ marginLeft: -150 + offset + (window.innerWidth >= 640 ? -10 : 0) }} // Adjust center based on width
       >
-         <div className="bg-cyber-black/95 backdrop-blur-xl border border-cyber-cyan/50 text-gray-200 text-sm shadow-[0_0_30px_rgba(0,240,255,0.2)] rounded overflow-hidden">
+         <div className="bg-cyber-black/95 backdrop-blur-xl border border-cyber-cyan/50 text-gray-200 text-sm shadow-[0_0_30px_rgba(0,240,255,0.2)] rounded-lg overflow-hidden">
             <div className="bg-cyber-cyan/10 px-3 py-2 text-[10px] font-mono text-cyber-cyan border-b border-cyber-cyan/20 uppercase tracking-[0.2em] flex justify-between items-center">
               <span className="flex items-center gap-2"><Terminal size={12} /> {title}</span>
             </div>
-            <div className="px-4 py-3 font-mono leading-relaxed text-left">
+            <div className="px-4 py-3 font-mono leading-relaxed text-left text-xs sm:text-sm">
               {tip}
             </div>
          </div>
+         {/* Arrow */}
          <div 
            className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-cyber-cyan/50"
            style={{ marginLeft: -offset }}
@@ -79,10 +80,10 @@ export const OperatorFamilyViz: React.FC = () => {
     G: false
   });
 
-  // State for interactive controls
+  // State for interactive controls - Sliders
   const [params, setParams] = useState({
-    distortion: 20, // 0-100
-    speed: 50       // 0-100 (Where 50 is 1x)
+    distortion: 30, // 0-100
+    speed: 50       // 0-100
   });
 
   const toggleOp = (key: string) => {
@@ -95,7 +96,6 @@ export const OperatorFamilyViz: React.FC = () => {
     let color = '#00f0ff'; // cyber cyan
     let glow = '0 0 30px rgba(0, 240, 255, 0.4)';
 
-    // Base properties based on active operators
     if (activeOps.E) color = '#fcee0a'; // yellow
     if (activeOps.C) {
         scale = 1.3; 
@@ -111,7 +111,6 @@ export const OperatorFamilyViz: React.FC = () => {
     }
     
     // Apply Distortion parameter
-    // Base distortion if G is active is higher
     const baseDistort = activeOps.G ? 25 : 0;
     const totalDistortion = baseDistort + (params.distortion * 0.4); 
     
@@ -119,14 +118,11 @@ export const OperatorFamilyViz: React.FC = () => {
   };
 
   const style = getOpStyle();
-  const speedMultiplier = params.speed / 50; // 1.0 is default
+  const speedMultiplier = Math.max(0.1, params.speed / 50); 
   
-  // Calculate keyframes for organic morphing based on distortion
   const borderRadiusKeyframes = useMemo(() => {
      const d = style.totalDistortion;
      if (d <= 5) return ["50% 50% 50% 50%"];
-     
-     // Create a sequence of distorted shapes
      return [
        "50% 50% 50% 50%",
        `${50-d}% ${50+d}% ${50-d*0.6}% ${50+d*0.6}%`,
@@ -137,27 +133,27 @@ export const OperatorFamilyViz: React.FC = () => {
   }, [style.totalDistortion]);
 
   return (
-    <div className="flex flex-col items-center p-6 bg-cyber-black rounded-xl border border-cyber-gray shadow-2xl relative w-full overflow-hidden">
+    <div className="flex flex-col items-center p-4 sm:p-6 bg-black/80 backdrop-blur-md rounded-xl border border-cyber-gray shadow-2xl relative w-full overflow-hidden group/card">
       {/* Decorative corners */}
-      <div className="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-cyber-cyan"></div>
-      <div className="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-cyber-cyan"></div>
-      <div className="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-cyber-cyan"></div>
-      <div className="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-cyber-cyan"></div>
+      <div className="absolute top-0 left-0 w-8 h-8 border-l-2 sm:border-l-4 border-t-2 sm:border-t-4 border-cyber-cyan opacity-50 group-hover/card:opacity-100 transition-opacity"></div>
+      <div className="absolute top-0 right-0 w-8 h-8 border-r-2 sm:border-r-4 border-t-2 sm:border-t-4 border-cyber-cyan opacity-50 group-hover/card:opacity-100 transition-opacity"></div>
+      <div className="absolute bottom-0 left-0 w-8 h-8 border-l-2 sm:border-l-4 border-b-2 sm:border-b-4 border-cyber-cyan opacity-50 group-hover/card:opacity-100 transition-opacity"></div>
+      <div className="absolute bottom-0 right-0 w-8 h-8 border-r-2 sm:border-r-4 border-b-2 sm:border-b-4 border-cyber-cyan opacity-50 group-hover/card:opacity-100 transition-opacity"></div>
 
       <div className="w-full flex justify-between items-center mb-4 border-b border-gray-800 pb-2 relative z-10">
-         <h3 className="font-mono text-xl text-white tracking-widest">SIMULATION.STATE</h3>
+         <h3 className="font-mono text-lg sm:text-xl text-white tracking-widest">SIMULATION.STATE</h3>
          <Activity size={20} className="text-cyber-cyan animate-pulse" />
       </div>
       
-      <div className="relative w-full aspect-square max-w-[260px] bg-cyber-black rounded-full border border-gray-800 flex items-center justify-center mb-6 overflow-hidden shadow-inner group z-10">
-         {/* Background Grid */}
+      {/* Visualization Circle */}
+      <div className="relative w-full aspect-square max-w-[200px] sm:max-w-[260px] bg-cyber-black rounded-full border border-gray-800 flex items-center justify-center mb-6 overflow-hidden shadow-inner group z-10">
          <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(#00f0ff 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
          <div className="absolute inset-0 border border-cyber-cyan/20 rounded-full animate-pulse-fast"></div>
          <div className="absolute inset-0 border-4 border-transparent border-t-cyber-cyan/30 rounded-full animate-spin linear" style={{ animationDuration: `${10 / speedMultiplier}s` }}></div>
          
          {/* The State Psi */}
          <motion.div
-            className="w-32 h-32 rounded-full relative blur-sm mix-blend-screen"
+            className="w-24 h-24 sm:w-32 sm:h-32 rounded-full relative blur-sm mix-blend-screen"
             animate={{
                 scale: style.scale,
                 rotate: style.rotate,
@@ -175,7 +171,6 @@ export const OperatorFamilyViz: React.FC = () => {
                 }
             }}
          >
-             {/* Inner core */}
              <div className="absolute inset-2 bg-white/10 rounded-full blur-md"></div>
              {activeOps.E && (
                  <motion.div 
@@ -186,9 +181,10 @@ export const OperatorFamilyViz: React.FC = () => {
              )}
          </motion.div>
          
-         <div className="absolute bottom-6 text-xs font-mono text-cyber-cyan bg-cyber-black/80 px-3 py-1 border border-cyber-cyan/30 backdrop-blur-sm rounded-sm">STATUS: |Ψ⟩</div>
+         <div className="absolute bottom-6 text-[10px] sm:text-xs font-mono text-cyber-cyan bg-cyber-black/80 px-3 py-1 border border-cyber-cyan/30 backdrop-blur-sm rounded-sm">STATUS: |Ψ⟩</div>
       </div>
 
+      {/* Toggles */}
       <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mb-6 z-10">
           {[
               { id: 'E', label: 'Ê(α)', name: 'DYNAMICAL' },
@@ -211,19 +207,18 @@ export const OperatorFamilyViz: React.FC = () => {
           ))}
       </div>
 
-      {/* Control Panel */}
-      <div className="w-full bg-cyber-dark/50 border border-gray-800 rounded p-4 relative z-10">
+      {/* Sliders */}
+      <div className="w-full bg-cyber-dark/50 border border-gray-800 rounded p-3 sm:p-4 relative z-10">
          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gray-500"></div>
          <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-gray-500"></div>
          <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-gray-500"></div>
          <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gray-500"></div>
 
-         <div className="flex items-center gap-2 mb-4 text-xs font-mono text-gray-400 uppercase tracking-widest border-b border-gray-800 pb-2">
-            <Sliders size={12} /> Operator Parameters
+         <div className="flex items-center gap-2 mb-4 text-[10px] sm:text-xs font-mono text-gray-400 uppercase tracking-widest border-b border-gray-800 pb-2">
+            <Sliders size={12} /> Real-time Parameters
          </div>
 
-         <div className="space-y-5">
-            {/* Distortion Control */}
+         <div className="space-y-4 sm:space-y-5">
             <div>
                <div className="flex justify-between text-[10px] font-mono mb-2">
                   <span className="text-cyber-cyan">DISTORTION_FIELD</span>
@@ -238,7 +233,6 @@ export const OperatorFamilyViz: React.FC = () => {
                />
             </div>
             
-            {/* Speed Control */}
             <div>
                <div className="flex justify-between text-[10px] font-mono mb-2">
                   <span className="text-cyber-yellow">TEMPORAL_FLUX</span>
@@ -270,26 +264,22 @@ export const IntegralSummationViz: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center p-6 bg-cyber-black rounded-xl border border-cyber-gray shadow-2xl relative w-full">
-      {/* Decorative corners */}
-      <div className="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-cyber-yellow"></div>
-      <div className="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-cyber-yellow"></div>
-      <div className="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-cyber-yellow"></div>
-      <div className="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-cyber-yellow"></div>
+    <div className="flex flex-col items-center p-4 sm:p-6 bg-black/80 backdrop-blur-md rounded-xl border border-cyber-gray shadow-2xl relative w-full group/card">
+      <div className="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-cyber-yellow opacity-50 group-hover/card:opacity-100 transition-opacity"></div>
+      <div className="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-cyber-yellow opacity-50 group-hover/card:opacity-100 transition-opacity"></div>
+      <div className="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-cyber-yellow opacity-50 group-hover/card:opacity-100 transition-opacity"></div>
+      <div className="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-cyber-yellow opacity-50 group-hover/card:opacity-100 transition-opacity"></div>
 
       <div className="flex items-center justify-between w-full mb-6">
-          <h3 className="font-mono text-xl text-white uppercase tracking-wider">Integral.Process</h3>
-          <div className="px-3 py-1 bg-cyber-dark border border-cyber-cyan text-cyber-cyan font-mono text-xs shadow-[0_0_10px_rgba(0,240,255,0.3)]">
+          <h3 className="font-mono text-lg sm:text-xl text-white uppercase tracking-wider">Integral.Process</h3>
+          <div className="px-3 py-1 bg-cyber-dark border border-cyber-cyan text-cyber-cyan font-mono text-[10px] sm:text-xs shadow-[0_0_10px_rgba(0,240,255,0.3)]">
             N_PARTITION: <span className="text-white font-bold">{n}</span>
           </div>
       </div>
 
-      {/* Graph Area */}
-      <div className="relative w-full h-48 bg-black/80 rounded border border-gray-800 overflow-hidden flex items-end px-4 mb-6 shadow-inner">
-        {/* Grid lines */}
+      <div className="relative w-full h-40 sm:h-48 bg-black/80 rounded border border-gray-800 overflow-hidden flex items-end px-4 mb-6 shadow-inner">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:30px_30px]"></div>
 
-        {/* Render bars */}
         <div className="flex items-end w-full h-full gap-[2px] relative z-10">
             {Array.from({ length: n }).map((_, i) => {
                 const x = i / n;
@@ -310,7 +300,7 @@ export const IntegralSummationViz: React.FC = () => {
         <div className="absolute bottom-0 left-0 w-full h-[2px] bg-cyber-cyan shadow-[0_0_15px_#00f0ff]"></div>
       </div>
 
-      <div className="w-full flex items-center justify-between text-sm font-mono text-gray-500">
+      <div className="w-full flex items-center justify-between text-xs sm:text-sm font-mono text-gray-500">
           <div className="flex items-center gap-2">
             <Sigma size={14} className="text-cyber-yellow" />
             <span>SUM</span>
@@ -318,7 +308,7 @@ export const IntegralSummationViz: React.FC = () => {
           <ChevronRight size={14} className="text-gray-700" />
           <div className="text-white tracking-widest hidden sm:block">INTEGRAL</div>
           <ChevronRight size={14} className="text-gray-700 hidden sm:block" />
-          <div className="text-cyber-red font-bold flex items-center gap-2 shadow-[0_0_20px_rgba(255,0,60,0.2)] px-2 py-1 border border-cyber-red/30 rounded bg-cyber-red/5 text-xs">
+          <div className="text-cyber-red font-bold flex items-center gap-2 shadow-[0_0_20px_rgba(255,0,60,0.2)] px-2 py-1 border border-cyber-red/30 rounded bg-cyber-red/10 text-xs">
               <Zap size={14} /> NULL
           </div>
       </div>
@@ -333,10 +323,10 @@ export const CollapseThresholdChart: React.FC = () => {
     const tauOR = (30 / energy) * 100;
 
     return (
-        <div className="flex flex-col gap-6 p-6 bg-cyber-black border border-cyber-gray rounded-2xl shadow-2xl relative w-full">
+        <div className="flex flex-col gap-6 p-4 sm:p-6 bg-black/80 backdrop-blur-md border border-cyber-gray rounded-2xl shadow-2xl relative w-full overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyber-cyan via-cyber-purple to-cyber-red rounded-t-2xl"></div>
             
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0 relative z-10">
                 <div>
                     <h3 className="font-mono text-xl text-white mb-1 uppercase tracking-wider">Condition Check</h3>
                     <p className="text-gray-500 text-xs font-mono tracking-wide">
@@ -348,10 +338,9 @@ export const CollapseThresholdChart: React.FC = () => {
                 </div>
             </div>
 
-            {/* Controls */}
-            <div className="bg-cyber-dark p-4 rounded border border-gray-800">
+            <div className="bg-cyber-dark p-4 rounded border border-gray-800 relative z-10">
                 <div className="flex justify-between mb-3 text-xs font-mono text-cyber-yellow font-bold">
-                    <span>INPUT: <MathTooltip tip="Gravitational Self-Energy. The energy uncertainty arising from the difference in spacetime geometries associated with the superposed states." title="DEF: GRAVITY">G[Ψ]</MathTooltip></span>
+                    <span>INPUT: <MathTooltip tip="Gravitational Self-Energy. The energy uncertainty arising from the difference in spacetime geometries." title="DEF: GRAVITY">G[Ψ]</MathTooltip></span>
                     <span>{energy} UNITS</span>
                 </div>
                 <input 
@@ -364,15 +353,11 @@ export const CollapseThresholdChart: React.FC = () => {
                 />
             </div>
             
-            {/* Visualization */}
-            <div className="relative h-32 border-b border-gray-700 flex items-end pb-1 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:15px_15px]">
-                {/* Threshold Line */}
+            <div className="relative h-32 border-b border-gray-700 flex items-end pb-1 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:15px_15px] z-10">
                 <div className="absolute left-0 w-full h-[2px] bg-cyber-red z-10 opacity-70 border-t border-dashed border-white" style={{ bottom: '40%' }}>
-                    {/* Moved LIMIT label to left-0 to avoid overlapping with Timescale T_OR box */}
                     <span className="absolute left-0 -top-6 text-[10px] font-mono font-bold text-cyber-red bg-cyber-black px-1 border border-cyber-red shadow-[0_0_10px_rgba(255,0,60,0.5)]">LIMIT: ℏ/τc</span>
                 </div>
 
-                {/* Energy Bar */}
                 <div className="w-full flex justify-center h-full items-end relative px-8">
                      <motion.div 
                         className={`w-full max-w-[120px] rounded-t-sm transition-colors duration-300 relative overflow-hidden ${thresholdMet ? 'bg-cyber-cyan' : 'bg-gray-700'}`}
@@ -384,14 +369,13 @@ export const CollapseThresholdChart: React.FC = () => {
                      </motion.div>
                 </div>
 
-                {/* Timescale Indicator */}
                 <div className="absolute right-0 top-0 w-32 p-2 bg-cyber-dark border border-gray-700 text-right shadow-lg">
                     <div className="text-[10px] text-gray-400 uppercase font-mono mb-1 tracking-widest">Timescale τ_OR</div>
                     <div className="font-mono text-xl text-white tracking-widest leading-none">{tauOR.toFixed(1)}<span className="text-[10px] text-gray-600 ml-1">ms</span></div>
                 </div>
             </div>
 
-            <div className="font-mono text-xs text-gray-400 leading-relaxed border-l-4 border-gray-800 pl-3 py-1 truncate">
+            <div className="font-mono text-xs text-gray-400 leading-relaxed border-l-4 border-gray-800 pl-3 py-1 truncate relative z-10">
                 {thresholdMet 
                     ? <span className="text-cyber-cyan text-shadow-neon">> SYSTEM ALERT: Self-energy threshold exceeded.</span>
                     : <span>> SYSTEM STATUS: Self-energy insufficient.</span>}
