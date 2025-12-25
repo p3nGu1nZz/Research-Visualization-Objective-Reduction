@@ -1,5 +1,4 @@
 
-
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -9,7 +8,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, Sigma, Scale, ChevronRight, Zap, Terminal, Sliders } from 'lucide-react';
 
-const MathTooltip = ({ children, tip, title = "DEFINITION" }: { children?: React.ReactNode; tip: string; title?: string }) => {
+export const MathTooltip = ({ children, tip, title = "DEFINITION" }: { children?: React.ReactNode; tip: string; title?: string }) => {
   const [offset, setOffset] = useState(0);
   const spanRef = useRef<HTMLSpanElement>(null);
 
@@ -138,13 +137,19 @@ export const OperatorFamilyViz: React.FC = () => {
   }, [style.totalDistortion]);
 
   return (
-    <div className="flex flex-col items-center w-full">
-      <div className="w-full flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+    <div className="flex flex-col items-center p-6 bg-cyber-black rounded-xl border border-cyber-gray shadow-2xl relative w-full overflow-hidden">
+      {/* Decorative corners */}
+      <div className="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-cyber-cyan"></div>
+      <div className="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-cyber-cyan"></div>
+      <div className="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-cyber-cyan"></div>
+      <div className="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-cyber-cyan"></div>
+
+      <div className="w-full flex justify-between items-center mb-4 border-b border-gray-800 pb-2 relative z-10">
          <h3 className="font-mono text-xl text-white tracking-widest">SIMULATION.STATE</h3>
          <Activity size={20} className="text-cyber-cyan animate-pulse" />
       </div>
       
-      <div className="relative w-full aspect-square max-w-[260px] bg-cyber-black rounded-full border border-gray-800 flex items-center justify-center mb-6 overflow-hidden shadow-inner group">
+      <div className="relative w-full aspect-square max-w-[260px] bg-cyber-black rounded-full border border-gray-800 flex items-center justify-center mb-6 overflow-hidden shadow-inner group z-10">
          {/* Background Grid */}
          <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(#00f0ff 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
          <div className="absolute inset-0 border border-cyber-cyan/20 rounded-full animate-pulse-fast"></div>
@@ -184,7 +189,7 @@ export const OperatorFamilyViz: React.FC = () => {
          <div className="absolute bottom-6 text-xs font-mono text-cyber-cyan bg-cyber-black/80 px-3 py-1 border border-cyber-cyan/30 backdrop-blur-sm rounded-sm">STATUS: |Ψ⟩</div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mb-6">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mb-6 z-10">
           {[
               { id: 'E', label: 'Ê(α)', name: 'DYNAMICAL' },
               { id: 'C', label: 'Ĉ(α)', name: 'VACUUM' },
@@ -207,7 +212,7 @@ export const OperatorFamilyViz: React.FC = () => {
       </div>
 
       {/* Control Panel */}
-      <div className="w-full bg-cyber-dark/50 border border-gray-800 rounded p-4 relative overflow-hidden">
+      <div className="w-full bg-cyber-dark/50 border border-gray-800 rounded p-4 relative z-10">
          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gray-500"></div>
          <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-gray-500"></div>
          <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-gray-500"></div>
@@ -265,7 +270,7 @@ export const IntegralSummationViz: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center p-6 bg-cyber-black rounded-xl border border-cyber-gray shadow-2xl relative overflow-hidden w-full">
+    <div className="flex flex-col items-center p-6 bg-cyber-black rounded-xl border border-cyber-gray shadow-2xl relative w-full">
       {/* Decorative corners */}
       <div className="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-cyber-yellow"></div>
       <div className="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-cyber-yellow"></div>
@@ -328,8 +333,8 @@ export const CollapseThresholdChart: React.FC = () => {
     const tauOR = (30 / energy) * 100;
 
     return (
-        <div className="flex flex-col gap-6 p-6 bg-cyber-black border border-cyber-gray rounded-2xl shadow-2xl relative overflow-hidden w-full">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyber-cyan via-cyber-purple to-cyber-red"></div>
+        <div className="flex flex-col gap-6 p-6 bg-cyber-black border border-cyber-gray rounded-2xl shadow-2xl relative w-full">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyber-cyan via-cyber-purple to-cyber-red rounded-t-2xl"></div>
             
             <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
                 <div>

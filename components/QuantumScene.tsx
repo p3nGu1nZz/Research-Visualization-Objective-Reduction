@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -78,7 +79,7 @@ const CyberTorus = () => {
 
 export const HeroScene: React.FC = () => {
   return (
-    <div className="absolute inset-0 z-0 opacity-100 pointer-events-none">
+    <div className="w-full h-full">
       <Canvas camera={{ position: [0, 0, 8], fov: 40 }} gl={{ toneMappingExposure: 1.5 }}>
         <fog attach="fog" args={['#050505', 5, 20]} />
         <ambientLight intensity={0.5} />
