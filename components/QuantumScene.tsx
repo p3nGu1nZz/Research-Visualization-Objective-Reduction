@@ -1,4 +1,3 @@
-
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -8,40 +7,6 @@ import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, MeshDistortMaterial, Sphere, Torus, Octahedron, Icosahedron, Stars, Environment } from '@react-three/drei';
 import * as THREE from 'three';
-
-// Add this to fix IntrinsicElements errors
-declare module 'react' {
-  namespace JSX {
-    interface IntrinsicElements {
-      meshStandardMaterial: any;
-      fog: any;
-      ambientLight: any;
-      pointLight: any;
-      spotLight: any;
-      group: any;
-      mesh: any;
-      cylinderGeometry: any;
-      gridHelper: any;
-    }
-  }
-}
-
-// Ensure global JSX is also covered for specific environments
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      meshStandardMaterial: any;
-      fog: any;
-      ambientLight: any;
-      pointLight: any;
-      spotLight: any;
-      group: any;
-      mesh: any;
-      cylinderGeometry: any;
-      gridHelper: any;
-    }
-  }
-}
 
 const NeonOperatorNode = ({ position, color, speed = 1, type = 'sphere' }: { position: [number, number, number]; color: string; speed?: number; type?: 'sphere' | 'octa' }) => {
   const ref = useRef<THREE.Mesh>(null);
